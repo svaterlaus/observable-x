@@ -1,0 +1,28 @@
+{
+  "name": "observable-x",
+  "version": "1.0.0",
+  "description": "Lightweight, \"hot\", multicast, extensible observables",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sVaterlaus/observable-x.git"
+  },
+  "author": "Spencer Vaterlaus",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/sVaterlaus/observable-x/issues"
+  },
+  "homepage": "https://github.com/sVaterlaus/observable-x#readme",
+  "dependencies": {},
+  "standard": {
+    "env": [
+      "node"
+    ]
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
+  }
+}

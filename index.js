@@ -25,6 +25,12 @@ const validateID = (id) => {
   if (typeof id !== 'number') throw new Error(`id must be a Number. Type: ${typeof id}`)
 }
 
+const validateOperators = (operators) => {
+  operators.forEach((operator) => {
+    if (typeof operator !== 'function') throw new Error(`operator must be a Function. Type: ${typeof operator}`)
+  })
+}
+
 function Observable (producer) {
   validateProducer(producer)
   const _running = Symbol('running')
@@ -33,50 +39,52 @@ function Observable (producer) {
   const _producer = Symbol('producer')
   const _orchestrator = Symbol('orchestrator')
 
-  const props = {
+  const self = {
     [_running]: false,
     [_nonce]: 0,
     [_observers]: [],
     [_producer]: producer,
     [_orchestrator]: {
-      next: (e) => { props[_observers].forEach((observer) => { observer.next(e) }) },
-      error: (e) => { props[_observers].forEach((observer) => { observer.error(e) }) },
-      complete: (e) => { props[_observers].forEach((observer) => { observer.complete(e) }) }
-    }
-  }
+      next: (e) => { self[_observers].forEach((observer) => { observer.next(e) }) },
+      error: (e) => { self[_observers].forEach((observer) => { observer.error(e) }) },
+      complete: (e) => { self[_observers].forEach((observer) => { observer.complete(e) }) }
+    },
 
-  const methods = {
     observe (observer) {
       validateObserver(observer)
-      const id = props[_nonce]
-      props[_observers] = [...props[_observers], { ...observer, _id: id }]
-      props[_nonce] += 1
-      if (props[_running] === false) {
-        props[_running] = true
-        props[_producer].start(props[_orchestrator])
+      const id = self[_nonce]
+      self[_observers] = [...self[_observers], { ...observer, _id: id }]
+      self[_nonce] += 1
+      if (self[_running] === false) {
+        self[_running] = true
+        self[_producer].start(self[_orchestrator])
       }
       return id
     },
+    pipe (...operators) {
+      validateOperators(operators)
+      return operators.reduce((result, operator) => operator(result), self)
+    },
     cancel (id) {
       validateID(id)
-      const targetIndex = props[_observers].findIndex(observer => observer._id === id)
+      const targetIndex = self[_observers].findIndex(observer => observer._id === id)
       if (targetIndex === -1) throw new Error(`observer not found. ID: ${id}`)
-      props[_observers] = [
-        ...props[_observers].slice(0, targetIndex),
-        ...props[_observers].slice(targetIndex + 1, props[_observers].length)
+      self[_observers] = [
+        ...self[_observers].slice(0, targetIndex),
+        ...self[_observers].slice(targetIndex + 1, self[_observers].length)
       ]
-      if (props[_observers].length === 0 && props[_producer].stop) props[_producer].stop()
+      if (self[_observers].length === 0 && self[_producer].stop) self[_producer].stop()
       return id
     },
     cancelAll () {
-      const ids = props[_observers].map(observer => observer.id)
-      props[_observers] = []
-      if (props[_producer].stop) props[_producer].stop()
+      const ids = self[_observers].map(observer => observer.id)
+      self[_observers] = []
+      if (self[_producer].stop) self[_producer].stop()
       return ids
     }
   }
 
-  return { ...props, ...methods }
+  return self
 }
 
 function Subject (initialValue) {
@@ -84,41 +92,44 @@ function Subject (initialValue) {
   const _nonce = Symbol('nonce')
   const _observers = Symbol('observers')
 
-  const props = {
+  const self = {
     [_nonce]: 0,
-    [_observers]: []
-  }
+    [_observers]: [],
 
-  const methods = {
-    next: (e) => { props[_observers].forEach((observer) => { observer.next(e) }) },
-    error: (e) => { props[_observers].forEach((observer) => { observer.error(e) }) },
-    complete: (e) => { props[_observers].forEach((observer) => { observer.complete(e) }) },
+    next: (e) => { self[_observers].forEach((observer) => { observer.next(e) }) },
+    error: (e) => { self[_observers].forEach((observer) => { observer.error(e) }) },
+    complete: (e) => { self[_observers].forEach((observer) => { observer.complete(e) }) },
     observe (observer) {
       validateObserver(observer)
-      const id = props[_nonce]
+      const id = self[_nonce]
       if (id === 0 && hasInitialValue) observer.next(initialValue)
-      props[_observers] = [...props[_observers], { ...observer, _id: id }]
-      props[_nonce] += 1
+      self[_observers] = [...self[_observers], { ...observer, _id: id }]
+      self[_nonce] += 1
       return id
+    },
+    pipe (...operators) {
+      validateOperators(operators)
+      return operators.reduce((result, operator) => operator(result), self)
     },
     cancel (id) {
       validateID(id)
-      const targetIndex = props[_observers].findIndex(observer => observer._id === id)
+      const targetIndex = self[_observers].findIndex(observer => observer._id === id)
       if (targetIndex === -1) throw new Error(`observer not found. ID: ${id}`)
-      props[_observers] = [
-        ...props[_observers].slice(0, targetIndex),
-        ...props[_observers].slice(targetIndex + 1, props[_observers].length)
+      self[_observers] = [
+        ...self[_observers].slice(0, targetIndex),
+        ...self[_observers].slice(targetIndex + 1, self[_observers].length)
       ]
       return id
     },
     cancelAll () {
-      const ids = props[_observers].map(observer => observer.id)
-      props[_observers] = []
+      const ids = self[_observers].map(observer => observer.id)
+      self[_observers] = []
       return ids
     }
+
   }
 
-  return { ...props, ...methods }
+  return self
 }
 
 module.exports = {

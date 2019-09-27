@@ -1,4 +1,4 @@
-const { Observable } = require('../core/observable')
+const Observable = require('../core/observable')
 
 const reduce = (callback, initialValue) => (observable) => Observable({
   start (observer) {

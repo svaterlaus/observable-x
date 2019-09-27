@@ -1,4 +1,4 @@
-const { Observable } = require('../core/observable')
+const Observable = require('../core/observable')
 
 const map = (callback) => (observable) => Observable({
   start (observer) {

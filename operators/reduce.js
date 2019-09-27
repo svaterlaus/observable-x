@@ -17,4 +17,4 @@ const reduce = (callback, initialValue) => (observable) => Observable({
   }
 })
 
-exports = reduce
+module.exports = reduce

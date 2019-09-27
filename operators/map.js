@@ -13,4 +13,4 @@ const map = (callback) => (observable) => Observable({
   }
 })
 
-exports = map
+module.exports = map

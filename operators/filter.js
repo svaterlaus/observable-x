@@ -13,4 +13,4 @@ const filter = (callback) => (observable) => Observable({
   }
 })
 
-exports = filter
+module.exports = filter

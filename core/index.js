@@ -1,4 +1,4 @@
-exports = {
-  Observable = require('./observable'),
-  Subject = require('./subject')
+module.exports = {
+  Observable: require('./observable'),
+  Subject: require('./subject')
 }

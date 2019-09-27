@@ -36,14 +36,18 @@ function Observable (producer) {
     },
 
     observe (observer) {
-      validate.observer(observer)
       const id = self[_nonce]
-      self[_observers] = [...self[_observers], { ...observer, _id: id }]
-      self[_nonce] += 1
+      if (typeof observer === 'function') {
+        self[_observers].push({ next: observer, _id: id })
+      } else {
+        validate.observer(observer)
+        self[_observers].push({ ...observer, _id: id })
+      }
       if (self[_running] === false) {
         self[_running] = true
         self[_stopProducer] = producer(self[_orchestrator])
       }
+      self[_nonce] += 1
       return id
     },
     pipe (...operators) {

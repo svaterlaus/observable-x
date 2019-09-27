@@ -5,14 +5,14 @@ function Observable (producer) {
   const _running = Symbol('running')
   const _nonce = Symbol('nonce')
   const _observers = Symbol('observers')
-  const _producer = Symbol('producer')
+  const _stopProducer = Symbol('stopProducer')
   const _orchestrator = Symbol('orchestrator')
 
   const self = {
     [_running]: false,
     [_nonce]: 0,
     [_observers]: [],
-    [_producer]: producer,
+    [_stopProducer]: null,
     [_orchestrator]: {
       next: (e) => {
         self[_observers].forEach((observer) => {
@@ -42,7 +42,7 @@ function Observable (producer) {
       self[_nonce] += 1
       if (self[_running] === false) {
         self[_running] = true
-        self[_producer].start(self[_orchestrator])
+        self[_stopProducer] = producer(self[_orchestrator])
       }
       return id
     },
@@ -55,18 +55,18 @@ function Observable (producer) {
       const targetIndex = self[_observers].findIndex(observer => observer._id === id)
       if (targetIndex === -1) throw new Error(`observer not found. ID: ${id}`)
       self[_observers].splice(targetIndex)
-      if (!self[_observers].length && self[_producer].stop) {
+      if (!self[_observers].length && self[_stopProducer]) {
         self[_running] = false
-        self[_producer].stop()
+        self[_stopProducer]()
       }
       return id
     },
     cancelAll () {
       const ids = self[_observers].map(observer => observer.id)
       self[_observers] = []
-      if (self[_producer].stop) {
+      if (self[_stopProducer]) {
         self[_running] = false
-        self[_producer].stop()
+        self[_stopProducer]()
       }
       return ids
     }
@@ -75,65 +75,50 @@ function Observable (producer) {
   return self
 }
 
-Observable.from = (...values) => Observable({
-  start (observer) {
-    values.forEach((value, i) => {
-      setTimeout(() => {
-        observer.next(value)
-        if (i === values.length - 1) observer.complete()
-      }, 0)
-    })
-  }
-})
-
-Observable.fromTimeout = (delay, value) => Observable({
-  start (observer) {
-    this.observer = observer
-    this.id = setTimeout(() => {
+Observable.from = (...values) => Observable((observer) => {
+  values.forEach((value, i) => {
+    setTimeout(() => {
       observer.next(value)
-      observer.complete()
-    }, delay)
-  },
-  stop () {
-    clearTimeout(this.id)
-    this.observer.complete()
+      if (i === values.length - 1) observer.complete()
+    }, 0)
+  })
+})
+
+Observable.fromTimeout = (delay, value) => Observable((observer) => {
+  const id = setTimeout(() => {
+    observer.next(value)
+    observer.complete()
+  }, delay)
+  return () => {
+    clearTimeout(id)
+    observer.complete()
   }
 })
 
-Observable.fromInterval = (delay) => Observable({
-  start (observer) {
-    this.observer = observer
-    let n = 1
-    this.id = setInterval(() => {
-      observer.next(n)
-      n += 1
-    }, delay)
-  },
-  stop () {
-    clearInterval(this.id)
-    this.observer.complete()
+Observable.fromInterval = (delay) => Observable((observer) => {
+  let n = 1
+  const id = setInterval(() => {
+    observer.next(n)
+    n += 1
+  }, delay)
+  return () => {
+    clearInterval(id)
+    observer.complete()
   }
 })
 
-Observable.fromPromise = (promise) => Observable({
-  async start (observer) {
-    try {
-      observer.next(await promise)
-      observer.complete()
-    } catch (err) {
-      observer.error(err)
-    }
-  }
+Observable.fromPromise = (promise) => Observable((observer) => {
+  promise.then((result) => {
+    observer.next(result)
+    observer.complete()
+  }).catch((err) => {
+    observer.error(err)
+  })
 })
 
-Observable.fromEvent = (target, eventName) => Observable({
-  start (observer) {
-    this.observer = observer
-    target.addEventListener(eventName, observer.next)
-  },
-  stop () {
-    target.removeEventListener(eventName, this.observer.next)
-  }
+Observable.fromEvent = (target, eventName) => Observable((observer) => {
+  target.addEventListener(eventName, observer.next)
+  return () => { target.removeEventListener(eventName, observer.next) }
 })
 
 module.exports = Observable

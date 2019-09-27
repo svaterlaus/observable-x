@@ -13,11 +13,8 @@ const validate = {
     }
   },
   producer: (producer) => {
-    if (!hasProp(producer, 'start')) {
-    } else if (typeof producer.start !== 'function') {
-      throw Error(`producer.start must be a Function. Type: ${typeof producer.start}`)
-    } else if (producer.stop && typeof producer.stop !== 'function') {
-      throw Error(`producer.stop must be a Function. Type: ${typeof producer.stop}`)
+    if (typeof producer !== 'function') {
+      throw Error(`producer must be a Function. Type: ${typeof producer.start}`)
     }
   },
   id: (id) => {

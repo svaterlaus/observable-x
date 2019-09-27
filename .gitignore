@@ -61,5 +61,7 @@ typings/
 .next
 
 # temporary files/folders
+tmp.js
+temp.js
 tmp
 temp

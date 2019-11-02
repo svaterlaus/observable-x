@@ -65,3 +65,6 @@ tmp.js
 temp.js
 tmp
 temp
+
+# system files
+.DS_Store

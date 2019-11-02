@@ -1,10 +1,10 @@
 {
   "name": "observable-x",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "Lightweight, \"hot\", multicast, extensible observables.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
@@ -23,6 +23,7 @@
     ]
   },
   "devDependencies": {
+    "jest": "^24.9.0",
     "jsdom": "^15.1.1",
     "standard": "^14.3.1"
   }

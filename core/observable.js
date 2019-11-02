@@ -31,6 +31,7 @@ function Observable (producer) {
       complete: () => {
         self[_observers].forEach((observer) => {
           if (observer.complete) observer.complete()
+          self.cancelAll()
         })
       }
     },

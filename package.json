@@ -3,6 +3,13 @@
   "version": "0.0.0",
   "description": "Lightweight, \"hot\", multicast, extensible observables.",
   "main": "index.js",
+  "keywords": [
+    "observable",
+    "observer",
+    "subject",
+    "multicast",
+    "reactive"
+  ],
   "scripts": {
     "test": "jest"
   },
